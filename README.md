@@ -19,6 +19,12 @@ Arnold uses **live schema introspection** — no generated files, no snapshots, 
 curl -fsSL https://raw.githubusercontent.com/HouseinIsProgramming/arnold/main/install.sh | bash
 ```
 
+If the above fails due to CDN caching, use:
+
+```bash
+gh api repos/HouseinIsProgramming/arnold/contents/install.sh --jq '.content' | base64 -d | bash
+```
+
 This installs the `arnold` binary and the Claude Code skill.
 
 ## Quick start
