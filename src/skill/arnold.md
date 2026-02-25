@@ -1,7 +1,7 @@
 ---
 name: arnold
 description: Execute GraphQL operations against a Vendure API. Use when the user wants to query, mutate, test, or explore a running Vendure GraphQL API (shop or admin). Handles schema discovery, authentication, and execution.
-argument-hint: <what you want to do, e.g. "create 30 test notifications for customer 33">
+argument-hint: <what you want to do, e.g. "list all order mutations" or "create test data for customer 5">
 allowed-tools: Bash(~/.claude/skills/arnold/arnold *), Bash(arnold *), Read, Glob, Grep
 ---
 

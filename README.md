@@ -25,16 +25,16 @@ This installs the `arnold` binary and the Claude Code skill.
 
 ```bash
 # Discover what operations exist
-arnold schema ops --api shop --filter notification
+arnold schema ops --api shop --filter order
 
-# Inspect the input type
-arnold schema type --api admin CreateUserNotificationInput
+# Inspect an input type
+arnold schema type --api admin UpdateOrderInput
 
 # Authenticate
 arnold auth login --api admin --email admin@example.com --password secret
 
-# Execute a mutation
-arnold exec --api admin --query 'mutation { createNotification(input: { ... }) { id } }'
+# Execute a query
+arnold exec --api admin --query '{ orders(options: { take: 5 }) { totalItems items { id code } } }'
 
 # Check auth status
 arnold auth status
@@ -45,9 +45,9 @@ arnold auth status
 After installing, the `/arnold` slash command is available in Claude Code:
 
 ```
-/arnold create 30 test notifications for customer 33
 /arnold find all order-related mutations in the admin API
-/arnold authenticate as superadmin and list recent orders
+/arnold create 5 test orders for customer 12
+/arnold authenticate as admin and list recent products
 ```
 
 The agent will discover the schema, ask for any missing context (IDs, credentials), authenticate, and execute — typically in 2-3 steps.
