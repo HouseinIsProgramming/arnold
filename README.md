@@ -134,17 +134,17 @@ libs/shared/vendure-plugins/<plugin-name>/CLAUDE.md
 Include the API flow (numbered steps), auth requirements, and gotchas. Do **not** duplicate type definitions — the schema handles that.
 
 ```markdown
-# Offers Plugin
+# Reviews Plugin
 
 ## API Flow
-1. Auth as shop customer with `AccessOffers` permission
-2. `createOffer` with productVariantId + quantities[]
-3. Admin reviews: `updateOfferStatus(status: APPROVED)`
-4. Customer sees it via `searchOffers`
+1. Auth as shop customer
+2. `submitProductReview` with productId, rating, body
+3. Admin moderates: `approveProductReview(id)` or `rejectProductReview(id)`
+4. Approved reviews visible via `productReviews(productId)`
 
 ## Gotchas
-- Offers require a company-linked customer
-- Creating an offer emits `OfferCreatedEvent` (triggers notification email)
+- Customers can only review products they have purchased
+- Approving a review recalculates the product's average rating
 ```
 
 Claude Code automatically picks up these files when working in the plugin directory.
