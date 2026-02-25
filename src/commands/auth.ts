@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import { existsSync, mkdirSync, writeFileSync, unlinkSync } from "fs";
-import { loadConfig, getApiUrl, getSessionDir } from "../lib/config.ts";
+import { loadConfig, getApiUrl, getSessionDir, validateApi } from "../lib/config.ts";
 import { executeGraphQL } from "../lib/client.ts";
 import { join } from "path";
 
@@ -15,36 +15,36 @@ authCommand
   .requiredOption("--email <email>", "Email address")
   .requiredOption("--password <password>", "Password")
   .action(async (opts) => {
+    validateApi(opts.api);
     const config = loadConfig();
     const url = getApiUrl(opts.api, config);
 
-    const query =
-      opts.api === "admin"
-        ? `mutation Login($username: String!, $password: String!) {
-            login(username: $username, password: $password) {
-              ... on CurrentUser { id identifier }
-              ... on InvalidCredentialsError { message }
-              ... on NativeAuthenticationError { message }
-            }
-          }`
-        : `mutation Login($username: String!, $password: String!) {
-            login(username: $username, password: $password) {
-              ... on CurrentUser { id identifier }
-              ... on InvalidCredentialsError { message }
-              ... on NativeAuthenticationError { message }
-              ... on NotVerifiedError { message }
-            }
-          }`;
+    const query = `mutation Login($username: String!, $password: String!) {
+      login(username: $username, password: $password) {
+        __typename
+        ... on CurrentUser { id identifier }
+        ... on ErrorResult { message errorCode }
+      }
+    }`;
 
     // Use raw fetch to capture the auth token from response headers
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query,
-        variables: { username: opts.email, password: opts.password },
-      }),
-    });
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query,
+          variables: { username: opts.email, password: opts.password },
+        }),
+      });
+    } catch (err: any) {
+      if (err?.code === "ConnectionRefused" || err?.cause?.code === "ECONNREFUSED") {
+        process.stderr.write(`Cannot connect to ${url} — is the Vendure server running?\n`);
+        process.exit(1);
+      }
+      throw err;
+    }
 
     const json = (await response.json()) as any;
 
@@ -53,9 +53,9 @@ authCommand
       process.exit(1);
     }
 
-    const result = json.data?.login;
-    if (result?.message) {
-      console.error(`Auth failed: ${result.message}`);
+    const result = json.data?.login as any;
+    if (result?.__typename !== "CurrentUser") {
+      console.error(`Auth failed: ${result?.message ?? "Unknown error"} (${result?.__typename})`);
       process.exit(1);
     }
 

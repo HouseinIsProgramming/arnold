@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import { readFileSync } from "fs";
-import { loadConfig, getApiUrl } from "../lib/config.ts";
+import { loadConfig, getApiUrl, validateApi } from "../lib/config.ts";
 import { executeGraphQL } from "../lib/client.ts";
 
 export const execCommand = new Command("exec")
@@ -11,6 +11,7 @@ export const execCommand = new Command("exec")
   .option("--variables <json>", "JSON variables", "{}")
   .option("--json", "Raw JSON output (default is pretty-printed)")
   .action(async (opts) => {
+    validateApi(opts.api);
     if (!opts.query && !opts.file) {
       console.error("Provide either --query or --file");
       process.exit(1);

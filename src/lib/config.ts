@@ -38,18 +38,33 @@ function parseRcFile(path: string): Partial<ArnoldConfig> {
   return config;
 }
 
+// Priority: ARNOLD_SHOP_API > .arnoldrc > Vendure PORT env > localhost:3000
+function resolveBaseUrl(): string {
+  const port = process.env.PORT ?? "3000";
+  return `http://localhost:${port}`;
+}
+
 export function loadConfig(): ArnoldConfig {
   const rcFile = findRcFile();
   const rcConfig = rcFile ? parseRcFile(rcFile) : {};
+  const baseUrl = resolveBaseUrl();
 
   return {
     shopApi:
-      process.env.ARNOLD_SHOP_API ?? rcConfig.shopApi ?? DEFAULT_CONFIG.shopApi,
+      process.env.ARNOLD_SHOP_API ??
+      rcConfig.shopApi ??
+      `${baseUrl}/shop-api`,
     adminApi:
       process.env.ARNOLD_ADMIN_API ??
       rcConfig.adminApi ??
-      DEFAULT_CONFIG.adminApi,
+      `${baseUrl}/admin-api`,
   };
+}
+
+export function validateApi(api: string): asserts api is "shop" | "admin" {
+  if (api !== "shop" && api !== "admin") {
+    throw new Error(`Invalid API "${api}" — must be "shop" or "admin"`);
+  }
 }
 
 export function getApiUrl(api: "shop" | "admin", config: ArnoldConfig): string {

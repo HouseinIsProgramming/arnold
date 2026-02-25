@@ -34,11 +34,20 @@ export async function executeGraphQL(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ query, variables }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ query, variables }),
+    });
+  } catch (err: any) {
+    if (err?.code === "ConnectionRefused" || err?.cause?.code === "ECONNREFUSED") {
+      process.stderr.write(`Cannot connect to ${url} — is the Vendure server running?\n`);
+      process.exit(1);
+    }
+    throw err;
+  }
 
   const json = (await response.json()) as GraphQLResponse;
 

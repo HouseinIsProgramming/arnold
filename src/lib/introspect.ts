@@ -22,6 +22,7 @@ interface TypeInfo {
   fields: FieldInfo[] | null;
   enumValues: string[] | null;
   inputFields: FieldInfo[] | null;
+  possibleTypes: string[] | null;
 }
 
 // Recursively unwrap GraphQL type wrappers to get the named type and modifiers
@@ -121,6 +122,7 @@ export async function describeType(
         fields(includeDeprecated: true) { name description type { ...TypeRef } }
         inputFields { name description type { ...TypeRef } }
         enumValues(includeDeprecated: true) { name description }
+        possibleTypes { name }
       }
     }
     fragment TypeRef on __Type {
@@ -146,5 +148,6 @@ export async function describeType(
     fields: t.fields?.map(parseField) ?? null,
     inputFields: t.inputFields?.map(parseField) ?? null,
     enumValues: t.enumValues?.map((e: any) => e.name) ?? null,
+    possibleTypes: t.possibleTypes?.map((p: any) => p.name) ?? null,
   };
 }

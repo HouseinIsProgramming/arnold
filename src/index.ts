@@ -9,10 +9,18 @@ const program = new Command();
 program
   .name("arnold")
   .description("Agent-first GraphQL API CLI")
-  .version("0.1.0");
+  .version("0.1.0")
+  .exitOverride();
 
 program.addCommand(schemaCommand);
 program.addCommand(authCommand);
 program.addCommand(execCommand);
 
-program.parse();
+try {
+  await program.parseAsync();
+} catch (err: any) {
+  // Commander throws on --help / --version with code 'commander.helpDisplayed'
+  if (err?.code?.startsWith("commander.")) process.exit(0);
+  console.error(err.message);
+  process.exit(1);
+}

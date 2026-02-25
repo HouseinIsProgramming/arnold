@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { loadConfig, getApiUrl } from "../lib/config.ts";
+import { loadConfig, getApiUrl, validateApi } from "../lib/config.ts";
 import { listOperations, describeType } from "../lib/introspect.ts";
 
 export const schemaCommand = new Command("schema").description(
@@ -11,8 +11,10 @@ schemaCommand
   .description("List queries and mutations")
   .requiredOption("--api <api>", "API to introspect (shop or admin)")
   .option("--filter <keyword>", "Filter operations by keyword")
+  .option("--compact", "Show only operation names")
   .option("--json", "Output as JSON")
   .action(async (opts) => {
+    validateApi(opts.api);
     const config = loadConfig();
     const url = getApiUrl(opts.api, config);
     const { queries, mutations } = await listOperations(url, opts.filter, undefined, opts.api);
@@ -22,29 +24,31 @@ schemaCommand
       return;
     }
 
+    const total = queries.length + mutations.length;
+    if (total > 50 && !opts.filter && !opts.compact) {
+      console.log(`\n  ${total} operations found. Use --filter <keyword> to narrow results or --compact for names only.\n`);
+    }
+
+    const formatOp = (op: typeof queries[0]) => {
+      if (opts.compact) return `  ${op.name}`;
+      const args = op.args.length > 0
+        ? `(${op.args.map((a) => `${a.name}: ${a.type}`).join(", ")})`
+        : "";
+      const desc = op.description ? ` — ${op.description}` : "";
+      return `  ${op.name}${args} → ${op.returnType}${desc}`;
+    };
+
     if (queries.length > 0) {
       console.log(`\nQueries (${queries.length}):\n`);
-      for (const q of queries) {
-        const args = q.args.length > 0
-          ? `(${q.args.map((a) => `${a.name}: ${a.type}`).join(", ")})`
-          : "";
-        const desc = q.description ? ` — ${q.description}` : "";
-        console.log(`  ${q.name}${args} → ${q.returnType}${desc}`);
-      }
+      for (const q of queries) console.log(formatOp(q));
     }
 
     if (mutations.length > 0) {
       console.log(`\nMutations (${mutations.length}):\n`);
-      for (const m of mutations) {
-        const args = m.args.length > 0
-          ? `(${m.args.map((a) => `${a.name}: ${a.type}`).join(", ")})`
-          : "";
-        const desc = m.description ? ` — ${m.description}` : "";
-        console.log(`  ${m.name}${args} → ${m.returnType}${desc}`);
-      }
+      for (const m of mutations) console.log(formatOp(m));
     }
 
-    if (queries.length === 0 && mutations.length === 0) {
+    if (total === 0) {
       console.log(opts.filter ? `No operations matching "${opts.filter}"` : "No operations found");
     }
   });
@@ -56,6 +60,7 @@ schemaCommand
   .argument("<typeName>", "Name of the type to describe")
   .option("--json", "Output as JSON")
   .action(async (typeName, opts) => {
+    validateApi(opts.api);
     const config = loadConfig();
     const url = getApiUrl(opts.api, config);
     const typeInfo = await describeType(url, typeName, undefined, opts.api);
@@ -82,6 +87,13 @@ schemaCommand
       console.log(`\n  Values:\n`);
       for (const v of typeInfo.enumValues) {
         console.log(`    ${v}`);
+      }
+    }
+
+    if (typeInfo.possibleTypes) {
+      console.log(`\n  Possible types:\n`);
+      for (const t of typeInfo.possibleTypes) {
+        console.log(`    ${t}`);
       }
     }
 
