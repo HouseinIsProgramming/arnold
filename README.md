@@ -16,7 +16,7 @@ Arnold uses **live schema introspection** — no generated files, no snapshots, 
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/housien/arnold/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/HouseinIsProgramming/arnold/main/install.sh | bash
 ```
 
 This installs the `arnold` binary and the Claude Code skill.
@@ -152,7 +152,7 @@ Claude Code automatically picks up these files when working in the plugin direct
 ## Building from source
 
 ```bash
-git clone https://github.com/housien/arnold.git
+git clone https://github.com/HouseinIsProgramming/arnold.git
 cd arnold
 bun install
 bun run build        # compile to ./arnold binary

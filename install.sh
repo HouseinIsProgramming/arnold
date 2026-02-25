@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="housien/arnold"
+REPO="HouseinIsProgramming/arnold"
 SKILL_DIR="$HOME/.claude/skills/arnold"
 BINARY_NAME="arnold"
 
