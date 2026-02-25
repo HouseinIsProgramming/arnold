@@ -1,85 +1,71 @@
-# Arnold — GraphQL API Skill
+---
+name: arnold
+description: Execute GraphQL operations against a Vendure API. Use when the user wants to query, mutate, test, or explore a running Vendure GraphQL API (shop or admin). Handles schema discovery, authentication, and execution.
+argument-hint: <what you want to do, e.g. "create 30 test notifications for customer 33">
+allowed-tools: Bash(~/.claude/skills/arnold/arnold *), Bash(arnold *), Read, Glob, Grep
+---
 
-## Using Arnold
+You are an agent that interacts with a running Vendure GraphQL API using the `arnold` CLI.
 
-Arnold is a CLI for discovering and executing GraphQL operations against a Vendure API.
+## Your task
 
-### Discover operations
-```bash
-arnold schema ops --api shop                        # list all shop queries + mutations
-arnold schema ops --api admin --filter order         # find order-related admin operations
-arnold schema ops --api shop --filter notification   # find notification operations
-```
+$ARGUMENTS
 
-### Inspect types
-```bash
-arnold schema type --api shop CreateNotificationInput  # see required fields
-arnold schema type --api admin OrderFilterParameter     # see filter options
-```
+## Workflow
 
-### Authenticate
-```bash
-arnold auth login --api shop --email user@example.com --password xxx
-arnold auth login --api admin --email admin@example.com --password xxx
-arnold auth status                                      # check active sessions
-arnold auth logout --api shop                           # clear session
-```
+Follow these steps to complete the task:
 
-### Execute queries
-```bash
-arnold exec --api shop --query 'query { activeCustomer { id emailAddress } }'
-arnold exec --api admin --query 'mutation { ... }' --variables '{"id": "1"}'
-arnold exec --api shop --file ./my-query.graphql --variables '{"limit": 10}'
-```
+1. **Discover** — find relevant operations:
+   ```bash
+   ~/.claude/skills/arnold/arnold schema ops --api shop --filter <keyword>
+   ~/.claude/skills/arnold/arnold schema ops --api admin --filter <keyword>
+   ```
 
-### Workflow
-1. Use `arnold schema ops` to discover what operations are available
-2. Use `arnold schema type` to understand input shapes and required fields
-3. If you need IDs, customer context, or other values you don't have — ask the user
-4. Use `arnold auth login` to authenticate (token is reused automatically)
-5. Use `arnold exec` to run queries/mutations
+2. **Inspect** — understand input shapes and required fields:
+   ```bash
+   ~/.claude/skills/arnold/arnold schema type --api <shop|admin> <TypeName>
+   ```
+   For union/result types, check `possibleTypes` to understand success/error shapes.
 
-### Tips
-- Add `--json` to any command for machine-readable output
-- Tokens are stored in `~/.arnold/` and reused across commands
-- The shop API requires customer auth, the admin API requires admin auth
+3. **Ask** — if you need IDs, credentials, or context you don't have, ask the user. Do not guess IDs.
 
-## For Plugin Developers
+4. **Authenticate** — if not already authenticated:
+   ```bash
+   ~/.claude/skills/arnold/arnold auth status
+   ~/.claude/skills/arnold/arnold auth login --api <shop|admin> --email <email> --password <password>
+   ```
 
-When creating or modifying a Vendure plugin, add a `CLAUDE.md` in the plugin root directory:
+5. **Execute** — run the query or mutation:
+   ```bash
+   ~/.claude/skills/arnold/arnold exec --api <shop|admin> --query '<graphql>' --variables '<json>'
+   ```
+
+6. **Verify** — confirm the result. If there are errors, read them and adjust.
+
+## Rules
+
+- Always use `--filter` with `schema ops` to avoid dumping the entire schema
+- Check auth status before executing — don't assume auth is active
+- For batch operations, check if a plural mutation exists (e.g. `createNotifications` vs `createNotification`)
+- The shop API is for customer-facing operations, the admin API is for back-office operations
+- If a plugin has a `CLAUDE.md` in its directory, read it for flow and gotcha context
+- Add `--json` when you need to parse output programmatically
+- Tokens are stored in `~/.arnold/` and persist across commands
+
+## Config
+
+- Default: `http://localhost:3000/shop-api` and `http://localhost:3000/admin-api`
+- Override with env vars: `ARNOLD_SHOP_API`, `ARNOLD_ADMIN_API`
+- Or with `PORT` env var (follows Vendure convention)
+- Or with `.arnoldrc` file in project root
+
+## Plugin developer guide
+
+When creating or modifying a Vendure plugin, add a `CLAUDE.md` in the plugin root:
 
 ```
 libs/shared/vendure-plugins/<plugin-name>/CLAUDE.md
 ```
 
-### What to include
-
-- **API Flow**: numbered steps for the primary use case (e.g., "1. auth as customer → 2. createOffer → 3. admin approves")
-- **Auth requirements**: what permissions or roles are needed
-- **Key gotchas**: non-obvious constraints, required state, side effects (e.g., "sends an email", "requires company-linked customer")
-
-### What NOT to include
-
-- Type definitions or field lists — the schema is the source of truth, use `arnold schema type` instead
-- Endpoint URLs or auth config — that's in `.arnoldrc` or env vars
-
-### Example
-
-```markdown
-# Offers Plugin
-
-## API Flow
-1. Auth as shop customer with `AccessOffers` permission
-2. `createOffer` with productVariantId + quantities[]
-3. Admin reviews: `updateOfferStatus(status: APPROVED)`
-4. Customer sees it via `searchOffers`
-
-## Auth
-- Shop: customer must have `AccessOffers` permission assigned via company role
-- Admin: requires `UpdateOffer` permission
-
-## Gotchas
-- Offers require a company-linked customer, not just any customer
-- Price tiers are auto-calculated from quantity brackets
-- Creating an offer emits `OfferCreatedEvent` (triggers notification email)
-```
+Include: API flow (numbered steps), auth requirements, gotchas (side effects, required state).
+Do NOT include: type definitions or field lists (schema is the source of truth).
