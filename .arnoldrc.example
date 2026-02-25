@@ -1,0 +1,6 @@
+# Arnold configuration
+# Copy to .arnoldrc and adjust for your environment
+# Env vars (ARNOLD_SHOP_API, ARNOLD_ADMIN_API) take precedence
+
+ARNOLD_SHOP_API=http://localhost:3000/shop-api
+ARNOLD_ADMIN_API=http://localhost:3000/admin-api
