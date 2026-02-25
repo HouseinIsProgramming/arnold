@@ -24,7 +24,7 @@ function findRcFile(): string | null {
   return null;
 }
 
-function parseRcFile(path: string): Partial<ArnoldConfig> {
+export function parseRcFile(path: string): Partial<ArnoldConfig> {
   const content = readFileSync(path, "utf-8");
   const config: Partial<ArnoldConfig> = {};
   for (const line of content.split("\n")) {

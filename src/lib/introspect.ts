@@ -26,7 +26,7 @@ interface TypeInfo {
 }
 
 // Recursively unwrap GraphQL type wrappers to get the named type and modifiers
-function unwrapType(type: any): { name: string; isRequired: boolean; isList: boolean } {
+export function unwrapType(type: any): { name: string; isRequired: boolean; isList: boolean } {
   let isRequired = false;
   let isList = false;
   let current = type;
@@ -46,14 +46,14 @@ function unwrapType(type: any): { name: string; isRequired: boolean; isList: boo
   return { name: current.name ?? "Unknown", isRequired, isList };
 }
 
-function formatTypeString(info: { name: string; isRequired: boolean; isList: boolean }): string {
+export function formatTypeString(info: { name: string; isRequired: boolean; isList: boolean }): string {
   let s = info.name;
   if (info.isList) s = `[${s}]`;
   if (info.isRequired) s = `${s}!`;
   return s;
 }
 
-function parseField(field: any): FieldInfo {
+export function parseField(field: any): FieldInfo {
   const typeInfo = unwrapType(field.type);
   return {
     name: field.name,

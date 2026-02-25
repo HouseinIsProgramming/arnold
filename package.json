@@ -14,6 +14,7 @@
     "build:darwin-x64": "bun build src/index.ts --compile --target=bun-darwin-x64 --outfile dist/arnold-darwin-x64",
     "build:linux-x64": "bun build src/index.ts --compile --target=bun-linux-x64 --outfile dist/arnold-linux-x64",
     "build:all": "bun run build:darwin-arm64 && bun run build:darwin-x64 && bun run build:linux-x64",
+    "test": "bun test",
     "link": "bun link"
   },
   "devDependencies": {
