@@ -7,6 +7,7 @@ import {
   validateApi,
   getApiUrl,
   parseRcFile,
+  setCliOverrides,
 } from "../lib/config.ts";
 
 describe("validateApi", () => {
@@ -85,6 +86,7 @@ describe("loadConfig", () => {
     delete process.env.ARNOLD_SHOP_API;
     delete process.env.ARNOLD_ADMIN_API;
     delete process.env.PORT;
+    setCliOverrides({});
   });
 
   test("defaults to localhost:3000", () => {
@@ -111,5 +113,28 @@ describe("loadConfig", () => {
     const config = loadConfig();
     expect(config.shopApi).toBe("http://custom:9000/shop");
     expect(config.adminApi).toBe("http://localhost:4000/admin-api");
+  });
+
+  test("CLI --port override takes precedence over PORT env", () => {
+    process.env.PORT = "4000";
+    setCliOverrides({ port: "3500" });
+    const config = loadConfig();
+    expect(config.shopApi).toBe("http://localhost:3500/shop-api");
+    expect(config.adminApi).toBe("http://localhost:3500/admin-api");
+  });
+
+  test("CLI --shop-api/--admin-api override takes precedence over everything", () => {
+    process.env.ARNOLD_SHOP_API = "http://env:9000/shop";
+    setCliOverrides({ shopApi: "http://cli:8000/shop-api", adminApi: "http://cli:8000/admin-api" });
+    const config = loadConfig();
+    expect(config.shopApi).toBe("http://cli:8000/shop-api");
+    expect(config.adminApi).toBe("http://cli:8000/admin-api");
+  });
+
+  test("CLI --port does not override explicit CLI --shop-api", () => {
+    setCliOverrides({ port: "3500", shopApi: "http://explicit:7000/shop-api" });
+    const config = loadConfig();
+    expect(config.shopApi).toBe("http://explicit:7000/shop-api");
+    expect(config.adminApi).toBe("http://localhost:3500/admin-api");
   });
 });

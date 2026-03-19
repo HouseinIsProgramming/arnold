@@ -7,12 +7,21 @@ export interface ArnoldConfig {
   adminApi: string;
 }
 
-const DEFAULT_CONFIG: ArnoldConfig = {
-  shopApi: "http://localhost:3000/shop-api",
-  adminApi: "http://localhost:3000/admin-api",
-};
+/** CLI overrides set via global --port / --shop-api / --admin-api flags */
+export interface CliOverrides {
+  port?: string;
+  shopApi?: string;
+  adminApi?: string;
+}
+
+let _cliOverrides: CliOverrides = {};
+
+export function setCliOverrides(overrides: CliOverrides) {
+  _cliOverrides = overrides;
+}
 
 function findRcFile(): string | null {
+  // 1. Walk up from cwd
   let dir = process.cwd();
   while (true) {
     const candidate = join(dir, ".arnoldrc");
@@ -21,6 +30,9 @@ function findRcFile(): string | null {
     if (parent === dir) break;
     dir = parent;
   }
+  // 2. Global fallback: ~/.arnoldrc
+  const globalRc = join(homedir(), ".arnoldrc");
+  if (existsSync(globalRc)) return globalRc;
   return null;
 }
 
@@ -38,9 +50,9 @@ export function parseRcFile(path: string): Partial<ArnoldConfig> {
   return config;
 }
 
-// Priority: ARNOLD_SHOP_API > .arnoldrc > Vendure PORT env > localhost:3000
+// Priority: CLI flags > env vars > .arnoldrc > PORT env > localhost:3000
 function resolveBaseUrl(): string {
-  const port = process.env.PORT ?? "3000";
+  const port = _cliOverrides.port ?? process.env.PORT ?? "3000";
   return `http://localhost:${port}`;
 }
 
@@ -51,10 +63,12 @@ export function loadConfig(): ArnoldConfig {
 
   return {
     shopApi:
+      _cliOverrides.shopApi ??
       process.env.ARNOLD_SHOP_API ??
       rcConfig.shopApi ??
       `${baseUrl}/shop-api`,
     adminApi:
+      _cliOverrides.adminApi ??
       process.env.ARNOLD_ADMIN_API ??
       rcConfig.adminApi ??
       `${baseUrl}/admin-api`,

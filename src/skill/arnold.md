@@ -57,9 +57,13 @@ Follow these steps to complete the task:
 ## Config
 
 - Default: `http://localhost:3000/shop-api` and `http://localhost:3000/admin-api`
-- Override with env vars: `ARNOLD_SHOP_API`, `ARNOLD_ADMIN_API`
-- Or with `PORT` env var (follows Vendure convention)
-- Or with `.arnoldrc` file in project root
+- Override with CLI flags (preferred): `--port <port>`, `--shop-api <url>`, `--admin-api <url>`
+  - Example: `arnold --port 3500 schema ops --api shop`
+- Or with `.arnoldrc` file (checked in cwd upward, then `~/.arnoldrc` as global fallback)
+- Or with env vars: `ARNOLD_SHOP_API`, `ARNOLD_ADMIN_API`, `PORT`
+- Priority: CLI flags > env vars > .arnoldrc > PORT > default (3000)
+
+**Important:** Prefer `--port` over env var prefixes — env var prefixes change the command signature and may trigger permission prompts in Claude Code.
 
 ## Plugin developer guide
 
