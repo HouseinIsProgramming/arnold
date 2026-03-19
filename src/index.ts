@@ -4,13 +4,14 @@ import { schemaCommand } from "./commands/schema.ts";
 import { authCommand } from "./commands/auth.ts";
 import { execCommand } from "./commands/exec.ts";
 import { setCliOverrides } from "./lib/config.ts";
+import pkg from "../package.json";
 
 const program = new Command();
 
 program
   .name("arnold")
   .description("Agent-first GraphQL API CLI")
-  .version("0.2.0")
+  .version(pkg.version)
   .exitOverride()
   .option("--port <port>", "Vendure server port (overrides PORT env and .arnoldrc)")
   .option("--shop-api <url>", "Shop API URL (overrides all other config)")
