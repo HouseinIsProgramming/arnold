@@ -10,7 +10,7 @@ const program = new Command();
 program
   .name("arnold")
   .description("Agent-first GraphQL API CLI")
-  .version("0.1.0")
+  .version("0.2.0")
   .exitOverride()
   .option("--port <port>", "Vendure server port (overrides PORT env and .arnoldrc)")
   .option("--shop-api <url>", "Shop API URL (overrides all other config)")
